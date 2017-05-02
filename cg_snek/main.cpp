@@ -917,7 +917,7 @@ public:
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)sVec3);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sVec3));
 	}
-
+	//generates the points of a circle
 	std::vector<VertexData> GenVertexData(vec3 a, vec3 b, float r, float v) {
 		std::vector<VertexData> ret;
 		//calculating parameters from direction vector and base point of the circle
