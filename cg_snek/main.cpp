@@ -898,12 +898,8 @@ public:
 		VertexData *pVtx = vtxData;
 		float r = 1.0f;
 		for (int i = 0; i < spine_vertices.size()-1; i++) {
-			vec3 a = spine_vertices[i];
-			vec3 b = spine_vertices[i + 1];
-			std::vector<VertexData> circle = GenVertexData(a, b, r, (float)i/spine_vertices.size());
-			for (int j = 0; j < 628; j++) {
-				pVtx[i * 628 + j] = circle[j];
-			}
+			vec3 o(0, 0, 0);
+
 		}
 
 		int stride = sizeof(VertexData);
@@ -917,30 +913,9 @@ public:
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)sVec3);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sVec3));
 	}
-	//generates the points of a circle
+	
 	std::vector<VertexData> GenVertexData(vec3 a, vec3 b, float r, float v) {
-		std::vector<VertexData> ret;
-		//calculating parameters from direction vector and base point of the circle
-		vec3 dir = b - a;
-		float dt = 0.01;
-		float teta = acosf((a.z * b.z - powf(a.z, 2.0f)) / ((b.z - a.z) * r));
-		float fi = acosf((a.x * b.x - powf(a.x, 2.0f)) / ((b.x - a.x) * r * sinf(teta)));
-		printf("sinteta: %f\t costeta: %f\t sinfi: %f\t cosfi: %f\n", sinf(teta), cosf(teta), sinf(fi), cosf(fi));
-		vec3 start(r * sinf(teta) * cosf(fi), r * sinf(teta) * sinf(fi), r * cosf(teta));  //calculating the acutal starting point for the circle
-		vec4 start4d = vec4(start);
-		for (int i = 0; i < 628; i++) { 
-			VertexData tmp;
-			//calculating position from starting point
-			vec4 pos4d = start4d * Rotate(0 + i * dt, dir.x, dir.y, dir.z);
-			vec3 pos = vec3(pos4d.v[0], pos4d.v[1], pos4d.v[2]);
-			tmp.position = pos;
-			//calculating normal for the point
-			tmp.normal = pos - a;
-			tmp.u = i / 628;
-			tmp.v = v;
-			ret.push_back(tmp);
-		}
-		return ret;
+		
 	}
 
 	float getT(float t, vec3 p0, vec3 p1) {
