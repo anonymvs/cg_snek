@@ -756,7 +756,7 @@ public:
 			//rotAngle -= 0.001;
 			if (rotAngle < 0.0f) b = true;
 		}
-		printf("rotAngle: %f\n", rotAngle);
+		//printf("rotAngle: %f\n", rotAngle);
 		//rotAngle = cosf(dt);
 	}
 };
@@ -860,7 +860,7 @@ public:
 		n = 5;
 		cps[0] = ControlPoint(0.0f, 0.0f, 8.0f, 0.0f);
 		cps[1] = ControlPoint(0.0f, 0.0f, 6.0f, 0.0f);
-		cps[2] = ControlPoint(0.0f, 0.0f, 4.0f, 0.0f);
+		cps[2] = ControlPoint(10.0f, 10.0f, 4.0f, 0.0f);
 		cps[3] = ControlPoint(0.0f, 0.0f, 2.0f, 0.0f);
 		cps[4] = ControlPoint(0.0f, 0.0f, 0.0f, 0.0f);
 	}
@@ -893,18 +893,65 @@ public:
 			spine_vertices.push_back(h);
 		}
 
-		nVtx = spine_vertices.size() * 628;
+		std::vector<std::vector<VertexData>> vtxMap;
+		float r = 1.0f;
+		for (int a = 0; a < spine_vertices.size(); a++) {
+			std::vector<vec3> points;
+			vec3 o(0, 0, 0);
+			float rad = 0;
+			for (int i = 0; i < 360; i++) {
+				float x = o.x + r * cosf(rad);
+				float z = o.z + r * sinf(rad);
+				points.push_back(vec3(x, 0, z));
+				rad++;
+			}
+			vec3 current = spine_vertices[a];
+			vec3 dir;
+			if (a == spine_vertices.size() - 1)
+				dir = current - spine_vertices[a - 1];
+			else
+				dir = spine_vertices[a + 1] - current;
+			dir = dir.norm();
+			vec3 i(1, 0, 0);
+			vec3 j(0, 1, 0);
+			vec3 k(0, 0, 1);
+			float xAngle = acosf((dir.x * i.x + dir.y * i.y + dir.z * i.z) / dir.length() * i.length());
+			float yAngle = acosf((dir.x * j.x + dir.y * j.y + dir.z * j.z) / dir.length() * j.length());
+			float zAngle = acosf((dir.x * k.x + dir.y * k.y + dir.z * k.z) / dir.length() * k.length());
+			
+			std::vector<VertexData> vtxDataVector;
+			for (int n = 0; n < 360; n++) {
+				vec4 tmp = vec4(points[n]) * Rotate(xAngle, i.x, i.y, i.z) * Rotate(yAngle, j.x, j.y, j.z) * Rotate(zAngle, k.x, k.y, k.z) * Translate(current.x, current.y, current.z);
+				vec3 pos(tmp.v[0], tmp.v[1], tmp.v[2]);
+				VertexData vd;
+				vd.position = pos;
+				vd.normal = pos - current;
+				vd.u = a / spine_vertices.size();
+				vd.v = n / 360;
+				vtxDataVector.push_back(vd);
+			}
+			vtxMap.push_back(vtxDataVector);
+		}
+
+		nVtx = spine_vertices.size() * 360 * 6;
 		VertexData *vtxData = new VertexData[nVtx];
 		VertexData *pVtx = vtxData;
-		float r = 1.0f;
-		for (int i = 0; i < spine_vertices.size()-1; i++) {
-			vec3 o(0, 0, 0);
-
+		unsigned int cnt = 0;
+		for (int i = 0; i < 360-1; i++) {
+			for (int j = 0; j < spine_vertices.size()-1; j++) {
+				*pVtx++ = vtxMap[j][i];
+				*pVtx++ = vtxMap[j][i+1];
+				*pVtx++ = vtxMap[j+1][i];
+				*pVtx++ = vtxMap[j][i+1];
+				*pVtx++ = vtxMap[j+1][i+1];
+				*pVtx++ = vtxMap[j+1][i];
+				cnt+=6;
+			}
 		}
 
 		int stride = sizeof(VertexData);
 		int sVec3 = sizeof(vec3);
-		glBufferData(GL_ARRAY_BUFFER, nVtx * stride, vtxData, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, cnt * stride, vtxData, GL_STATIC_DRAW);
 
 		glEnableVertexAttribArray(0);  // AttribArray 0 = POSITION
 		glEnableVertexAttribArray(1);  // AttribArray 1 = NORMAL
@@ -912,10 +959,6 @@ public:
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)sVec3);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sVec3));
-	}
-	
-	std::vector<VertexData> GenVertexData(vec3 a, vec3 b, float r, float v) {
-		
 	}
 
 	float getT(float t, vec3 p0, vec3 p1) {
@@ -1077,49 +1120,9 @@ void onInitialization() {
 	///SCENE CREATION
 	scene.Create(camera, light, rs);
 
-	scene.AddObject(&head);
+	
 	scene.AddObject(&body);
-
-
-	/*
-	// Create vertex shader from string
-	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	if (!vertexShader) {
-		printf("Error in vertex shader creation\n");
-		exit(1);
-	}
-	glShaderSource(vertexShader, 1, &vertexSource, NULL);
-	glCompileShader(vertexShader);
-	checkShader(vertexShader, "Vertex shader error");
-
-	// Create fragment shader from string
-	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	if (!fragmentShader) {
-		printf("Error in fragment shader creation\n");
-		exit(1);
-	}
-	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-	glCompileShader(fragmentShader);
-	checkShader(fragmentShader, "Fragment shader error");
-
-	// Attach shaders to a single program
-	shaderProgram = glCreateProgram();
-	if (!shaderProgram) {
-		printf("Error in shader program creation\n");
-		exit(1);
-	}
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-
-	// Connect the fragmentColor to the frame buffer memory
-	glBindFragDataLocation(shaderProgram, 0, "fragmentColor");	// fragmentColor goes to the frame buffer memory
-
-																// program packaging
-	glLinkProgram(shaderProgram);
-	checkLinking(shaderProgram);
-	// make this program run
-	glUseProgram(shaderProgram);
-	*/
+	scene.AddObject(&head);
 }
 
 void onExit() {
