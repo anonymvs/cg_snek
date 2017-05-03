@@ -610,20 +610,38 @@ public:
 };
 
 
-unsigned int nVtx;
-struct Geometry {
+//unsigned int nVtx;
+//unsigned int nVtx_snek_body;
+
+class Geometry {
+public:
 	unsigned int vao;
+	//unsigned int nVtx;
+	unsigned int nVtx;
 
 	Geometry() {
 
 	}
 
-	void Create() {
+	void Create(int a) { // a = 0 head; a = 1 body
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
+		
 	}
 
-	void Draw() {
+	void Draw(int a ) {
+		//glBindVertexArray(vao);
+		/*
+		if (a == 0) {
+			glBindVertexArray(vao);
+			glDrawArrays(GL_TRIANGLES, 0, nVtx);
+		}
+		if (a == 1) {
+			glBindVertexArray(vao);
+			glDrawArrays(GL_TRIANGLES, nVtx, nVtx_snek_body);
+		}
+		*/
+
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, nVtx);
 	}
@@ -638,17 +656,18 @@ struct VertexData {
 	}
 };
 
-struct ParamSurface : Geometry {
+struct ParamSurface : public Geometry {
 	virtual VertexData GenVertexData(float u, float v) = 0;
 
 	void Create(int N, int M) {
-		Geometry::Create();
+		Geometry::Create(0);
 
 		nVtx = N * M * 6;
+		
 		unsigned int vbo;
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
+		
 		VertexData *vtxData = new VertexData[nVtx];
 		VertexData *pVtx = vtxData;
 
@@ -662,7 +681,7 @@ struct ParamSurface : Geometry {
 				*pVtx++ = GenVertexData((float)i / N, (float)(j + 1) / M);
 			}
 		}
-
+		//printf("nVtx: %d\n", nVtx);
 		int stride = sizeof(VertexData);
 		int sVec3 = sizeof(vec3);
 		glBufferData(GL_ARRAY_BUFFER, nVtx * stride, vtxData, GL_STATIC_DRAW);
@@ -740,14 +759,14 @@ public:
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture->textureId);
 
-		geometry->Draw();
+		geometry->Draw(0);
 	}
 	bool b = true;
 	void Animate(float dt) {
-		//pos = vec3(cosf(dt) * 5.0f, cosf(dt) * 5.0f, 0);
+		pos = vec3(cosf(dt) * 5.0f, cosf(dt) * 5.0f, 0);
 		//scale = vec3(1.0f, 0.5f, 1.0f);
 		//scale = vec3(1, 1, 1);
-		
+		/*
 		if (b) {
 			rotAngle += 0.001;
 			if (rotAngle > M_PI * 2) b = false;
@@ -756,8 +775,8 @@ public:
 			//rotAngle -= 0.001;
 			if (rotAngle < 0.0f) b = true;
 		}
-		//printf("rotAngle: %f\n", rotAngle);
-		//rotAngle = cosf(dt);
+		*/
+		rotAngle = cosf(dt);
 	}
 };
 
@@ -794,9 +813,11 @@ public:
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture->textureId);
 
-		geometry->Draw();
+		geometry->Draw(1);
 	}
-	void Animate(float dt) {}
+	void Animate(float dt) {
+		pos = vec3(cosf(dt) * 5.0f, cosf(dt) * 5.0f, 0);
+	}
 
 };
 
@@ -806,12 +827,14 @@ class Sphere : public ParamSurface {
 	vec3 center;
 	float radius;
 public:
-	Sphere(vec3 c, float r) : center(c), radius(r) {
+	Sphere()  {
 
 	}
 
-	void Create() {
-		ParamSurface::Create(16, 16); // tesselation level
+	void Create(vec3 c, float r) {
+		center = c;
+		radius = r;
+		ParamSurface::Create(32, 32); // tesselation level
 	}
 
 	VertexData GenVertexData(float u, float v) {
@@ -860,14 +883,14 @@ public:
 		n = 5;
 		cps[0] = ControlPoint(0.0f, 0.0f, 8.0f, 0.0f);
 		cps[1] = ControlPoint(0.0f, 0.0f, 6.0f, 0.0f);
-		cps[2] = ControlPoint(10.0f, 10.0f, 4.0f, 0.0f);
+		cps[2] = ControlPoint(5.0f, 5.0f, 4.0f, 0.0f);
 		cps[3] = ControlPoint(0.0f, 0.0f, 2.0f, 0.0f);
 		cps[4] = ControlPoint(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 
 	void Create() {
-		Geometry::Create();
-
+		Geometry::Create(1);
+		
 		unsigned int vbo;
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -887,7 +910,7 @@ public:
 															* 0.9f );
 		}
 
-		float dt = 0.025;
+		float dt = 0.25;
 		for(float i = cps[0].t; i <= cps[n-1].t; i += dt ) {
 			vec3 h = r(i);
 			spine_vertices.push_back(h);
@@ -951,7 +974,8 @@ public:
 
 		int stride = sizeof(VertexData);
 		int sVec3 = sizeof(vec3);
-		glBufferData(GL_ARRAY_BUFFER, cnt * stride, vtxData, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, nVtx * stride, vtxData, GL_STATIC_DRAW);
+		//printf("cnt: %d\n", cnt);
 
 		glEnableVertexAttribArray(0);  // AttribArray 0 = POSITION
 		glEnableVertexAttribArray(1);  // AttribArray 1 = NORMAL
@@ -1044,6 +1068,8 @@ Texture texture_snek_body;
 Head head;
 Body body;
 Light light;
+CatmullRom snek_body;
+Sphere sp;
 
 // Initialization, create an OpenGL context
 void onInitialization() {
@@ -1051,11 +1077,11 @@ void onInitialization() {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glEnable(GL_DEPTH_TEST); // z-buffer is on
 	glDisable(GL_CULL_FACE); // backface culling is off
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	// Create objects by setting up their vertex data on the GPU
 	///CAMERA CREATION
-	vec3 wEye(0.0f, 0.0f, 10.0f);
+	vec3 wEye(0.0f, 0.0f, 15.0f);
 	vec3 wLookat(0.0f, 0.0f, 7.0f);
 	vec3 wVup(0.0f, 1.0f, 0.0f); //paralell with Y axis
 	float fov = 45;
@@ -1066,26 +1092,26 @@ void onInitialization() {
 
 	///PHONG CREATION
 	phong_snek_hed.Init();
-	phong_snek_body.Init();
+	//phong_snek_body.Init();
 
 	///SPHERE CREATION
 	//geometry
 	vec3 pos(0.0f, 0.0f, 0.0f);
 	float r = 3.0f;
-	Sphere sp(pos, r);
-	sp.Create();
+	
+	sp.Create(pos, r);
 
-	CatmullRom snek_body;
+	
 	snek_body.Create();
 
 	//material
 	vec3 kd(0.0f, 0.0f, 1.0f);
 	vec3 ks(0.0f, 1.0f, 1.0f);
-	vec3 ka(0.2f, 0.2f, 0.2f);
+	vec3 ka(0.5f, 0.5f, 0.5f);
 	float shininess = 50.0f;
 	material.Create(kd, ks, ka, shininess);
 
-	kd = vec3(1.0f, 0.0f, 0.0f);
+	kd = vec3(0.0f, 1.0f, 0.0f);
 	ks = vec3(0.0f, 1.0f, 1.0f);
 	ka = vec3(0.2f, 0.2f, 0.2f);
 	shininess = 50.0f;
@@ -1109,7 +1135,7 @@ void onInitialization() {
 	//body
 	vec3 scale_body = vec3(1, 1, 1);
 	pos = vec3(0, 0, 0);
-	body.Create((Geometry*)&snek_body, &material_snek_body, &texture_snek_body, (Shader*)&phong_snek_body, scale_body, pos, rotAxis, rotAngle);
+	body.Create((Geometry*)&snek_body, &material_snek_body, &texture_snek_body, (Shader*)&phong_snek_hed, scale_body, pos, rotAxis, rotAngle);
 
 	///LIGHT CREATION
 	vec3 La(0.2f, 0.2f, 0.2f);
@@ -1123,6 +1149,7 @@ void onInitialization() {
 	
 	scene.AddObject(&body);
 	scene.AddObject(&head);
+	
 }
 
 void onExit() {

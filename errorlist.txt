@@ -1,0 +1,20 @@
+Mesa warning: couldn't open libtxc_dxtn.so, software DXTn compression/decompression unavailable
+Mesa: User error: GL_INVALID_OPERATION in glDrawArrays(no VAO bound)
+Mesa: User error: GL_INVALID_OPERATION in glBindTexture(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glDrawArrays(no VAO bound)
+Mesa: User error: GL_INVALID_OPERATION in glBindVertexArray(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glDrawArrays(no VAO bound)
+Mesa: User error: GL_INVALID_OPERATION in glBindTexture(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glBindVertexArray(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glDrawArrays(no VAO bound)
+Mesa: 1 similar GL_INVALID_OPERATION errors
+Mesa: User error: GL_INVALID_OPERATION in glBindTexture(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glDrawArrays(no VAO bound)
+Mesa: 1 similar GL_INVALID_OPERATION errors
+Mesa: User error: GL_INVALID_OPERATION in glBindTexture(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glDrawArrays(no VAO bound)
+Mesa: User error: GL_INVALID_OPERATION in glBindVertexArray(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glDrawArrays(no VAO bound)
+Mesa: User error: GL_INVALID_OPERATION in glBindTexture(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glBindVertexArray(non-gen name)
+Mesa: User error: GL_INVALID_OPERATION in glDrawArrays(no VAO bound)
